@@ -2,9 +2,10 @@ package com.example.chapter2;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@NoArgsConstructor
+@Document
 public class Image {
     private int id;
     private String name;
