@@ -15,16 +15,7 @@ public class ApiController {
     private static final String API_BASE_PATH = "/api";
 
     // tag::get[]
-    @GetMapping(API_BASE_PATH + "/images")
-    Flux<Image> images() {
-        Hooks.onOperatorDebug();
 
-        return Flux.just(
-                new Image(1, "learning-spring-boot-cover.jpg"),
-                new Image(2, "learning-spring-boot-2nd-edition-cover.jpg"),
-                new Image(3, "bazinga.png")
-        );
-    }
 
     @PostMapping(API_BASE_PATH + "/images")
     Mono<Void> create(@RequestPart Flux<FilePart> images) {

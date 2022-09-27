@@ -17,27 +17,27 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 @Service
 public class ImageService {
 
-    private static String UPLOAD_ROOT = "upload-dir";
-
     private final ResourceLoader resourceLoader;
 
-    public ImageService(ResourceLoader resourceLoader) {
+    private final ImageRepository imageRepository;
+
+    private static String UPLOAD_ROOT = "upload-dir";
+
+
+    public ImageService(ResourceLoader resourceLoader, ImageRepository imageRepository) {
         this.resourceLoader = resourceLoader;
+        this.imageRepository = imageRepository;
     }
+
     public Flux<Image> findAllImages() {
-        try {
-            return Flux.fromIterable(
-                            Files.newDirectoryStream(Paths.get(UPLOAD_ROOT)))
-                    .map(path ->
-                            new Image(path.hashCode(),
-                                    path.getFileName().toString()));
-        } catch (IOException e) {
-            return Flux.empty();
-        }
+
+        return imageRepository.findAll()
+                .log("findAll");
     }
 
     public Mono<Resource> findOneImage(String filename) {
@@ -48,19 +48,59 @@ public class ImageService {
 
     public Mono<Void> createImage(Flux<FilePart> files) {
         return files
-                .flatMap(file -> file.transferTo(
-                        Paths.get(UPLOAD_ROOT, file.filename()).toFile()))
-                .then();
+                .log("createImage-files")
+                .flatMap(file -> {
+                    Mono<Image> saveDatabaseImage = imageRepository.save(
+                            new Image(
+                                    UUID.randomUUID().toString(),
+                                    file.filename()))
+                            .log("createImage-save");
+
+                    Mono<Void> copyFile = Mono.just(
+                                    Paths.get(UPLOAD_ROOT, file.filename())
+                                            .toFile())
+                            .log("createImage-picktarget")
+                            .map(destFile -> {
+                                try {
+                                    destFile.createNewFile();
+                                    return destFile;
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            })
+                            .log("createImage-newFile")
+                            .flatMap(file::transferTo)
+                            .log("createImage-copy");
+
+                    return Mono.when(saveDatabaseImage, copyFile)
+                            .log("createImage-when");
+                })
+                .log("createImage-flatMap")
+                .then()
+                .log("createImage-done");
     }
 
     public Mono<Void> deleteImage(String filename) {
-        return Mono.fromRunnable(() -> {
+        Mono<Void> deleteDatabaseImage = imageRepository
+                .findByName(filename)
+                .log("deleteImage-find")
+                .flatMap(imageRepository::delete)
+                .log("deleteImage-record");
+
+        Mono<Object> deleteFile = Mono.fromRunnable(() -> {
             try {
-                Files.deleteIfExists(Paths.get(UPLOAD_ROOT, filename));
+                Files.deleteIfExists(
+                        Paths.get(UPLOAD_ROOT, filename));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        });
+        })
+                .log("deleteImage-file");
+
+        return Mono.when(deleteDatabaseImage, deleteFile)
+                .log("deleteImage-when")
+                .then()
+                .log("deleteImage-done");
     }
 
 
