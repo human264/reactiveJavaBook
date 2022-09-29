@@ -27,21 +27,22 @@ repositories {
 }
 
 dependencies {
-    implementation('org.springframework.boot:spring-boot-starter-webflux')
-    implementation('org.synchronoss.cloud:nio-multipart-parser')
-    implementation('org.springframework.boot:spring-boot-starter-data-mongodb-reactive')
-    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation('org.projectlombok:lombok')
+    implementation('org.springframework.boot:spring-boot-starter-webflux:2.7.3')
+    implementation('org.synchronoss.cloud:nio-multipart-parser:1.1.0')
+    implementation('org.springframework.boot:spring-boot-starter-data-mongodb-reactive:2.7.3')
+    implementation('org.springframework.boot:spring-boot-starter-thymeleaf:2.7.3')
+    implementation('org.projectlombok:lombok:1.18.24')
     implementation 'junit:junit:4.13.1'
 
+
     // tag::test-1[]
-    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('org.springframework.boot:spring-boot-starter-test:2.7.3')
     // end::test-1[]
     // tag::test-2[]
-    testImplementation("io.projectreactor:reactor-test")
+    testImplementation('io.projectreactor:reactor-test:3.4.23')
     // end::test-2[]
     // tag::test-3[]
-    testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+    testImplementation('de.flapdoodle.embed:de.flapdoodle.embed.mongo:3.4.9')
     // end::test-3[]
     // tag::test-4[]
     testImplementation("junit:junit:5.9.0")
@@ -50,6 +51,9 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
     implementation group: 'org.mockito', name: 'mockito-core', version: '2.22.0'
+    implementation 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
 }
 
 tasks.named('test') {
